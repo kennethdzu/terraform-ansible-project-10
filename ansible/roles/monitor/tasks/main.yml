@@ -1,0 +1,69 @@
+---
+- name: Ensure Firewalld is Running
+  ansible.builtin.service:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: Open Firewall Port
+  ansible.posix.firewalld:
+    port: "{{ item }}/tcp" 
+    permanent: true
+    state: enabled
+    immediate: true
+  loop: [9090, 3000]
+
+- name: Create Config Directory
+  ansible.builtin.file:
+    path: /etc/prometheus
+    state: directory
+    mode: '0755'
+
+- name: Deploy Prometheus Config (The Actual YAML)
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+    mode: '0644'
+
+
+- name: Deploy Prometheus Quadlet
+  ansible.builtin.copy:
+    dest: /etc/containers/systemd/prometheus.container
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Prometheus
+      [Container]
+      Image=docker.io/prom/prometheus:latest
+      PublishPort=9090:9090
+      # Now this file actually exists!
+      Volume=/etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:Z
+
+- name: Deploy Grafana Quadlet
+  ansible.builtin.copy:
+    dest: /etc/containers/systemd/grafana.container
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Grafana Dashboard
+      [Container]
+      Image=docker.io/grafana/grafana:latest
+      PublishPort=3000:3000
+
+- name: Reload Systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Pre-pull Images
+  containers.podman.podman_image:
+    name: "{{ item }}"
+  loop: 
+    - docker.io/prom/prometheus:latest
+    - docker.io/grafana/grafana:latest
+
+- name: Start Monitoring
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop: [prometheus, grafana]

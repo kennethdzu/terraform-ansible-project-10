@@ -1,0 +1,21 @@
+---
+
+- name: Common Setup And Node Explorer
+  hosts: cluster
+  become: true
+  roles: [common]
+
+- name: Setup Monitoring
+  hosts: monitor
+  become: true
+  roles: [monitor]
+
+- name: Setup Web
+  hosts: web
+  become: true
+  roles: [web]
+
+- name: Setup Db
+  hosts: db
+  become: true
+  roles: [db]

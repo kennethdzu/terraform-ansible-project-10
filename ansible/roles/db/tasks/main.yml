@@ -1,0 +1,46 @@
+---
+- name: Ensure Firewalld is Running
+  ansible.builtin.service:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: Allow Web Node (192.168.110.20) to Redis
+  ansible.posix.firewalld:
+    rich_rule: 'rule family="ipv4" source address="192.168.110.20" port port="6379" protocol="tcp" accept'
+    permanent: true
+    state: enabled
+    immediate: true
+
+- name: Allow Monitor Node (192.168.110.10) to Redis
+  ansible.posix.firewalld:
+    rich_rule: 'rule family="ipv4" source address="192.168.110.10" port port="6379" protocol="tcp" accept'
+    permanent: true
+    state: enabled
+    immediate: true
+
+- name: Pull Redis Image
+  containers.podman.podman_image:
+    name: docker.io/library/redis:alpine
+
+- name: Create Redis Quadlet
+  ansible.builtin.copy:
+    dest: /etc/containers/systemd/redis.container
+    content: |
+      [Unit]
+      Description=Backend Redis Database
+      [Container]
+      Image=docker.io/library/redis:alpine
+      PublishPort=6379:6379
+      Label=app=backend
+    mode: '0644'
+
+- name: Reload Systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Start Redis Service
+  ansible.builtin.systemd:
+    name: redis
+    state: started
+    enabled: true

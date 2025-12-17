@@ -1,0 +1,40 @@
+---
+- name: Ensure Firewalld is Running
+  ansible.builtin.service:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: Open HTTP Firewall Port
+  ansible.posix.firewalld:
+    service: http
+    permanent: true
+    state: enabled
+    immediate: true
+
+
+- name: Pull Nginx Image
+  containers.podman.podman_image:
+    name: docker.io/library/nginx:alpine
+
+- name: Create Nginx Quadlet
+  ansible.builtin.copy:
+    dest: /etc/containers/systemd/nginx.container
+    content: |
+      [Unit]
+      Description=Frontend Web Server
+      [Container]
+      Image=docker.io/library/nginx:alpine
+      PublishPort=80:80
+      Label=app=frontend
+    mode: '0644'
+
+- name: Reload Systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Start Nginx Service
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+    enabled: true

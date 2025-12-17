@@ -1,0 +1,60 @@
+---
+
+- name: Wait For Cloud_init To Finish Booting
+  ansible.builtin.wait_for:
+    path: /var/lib/cloud/instance/boot-finished
+    state: present
+    timeout: 300
+
+- name: Install Tools
+  ansible.builtin.dnf:
+    name: [container-tools, firewalld, python3-libselinux, tar, policycoreutils-python-utils]
+    state: present
+
+- name: Create Node Exporter User
+  ansible.builtin.user:
+    name: node_exporter
+    shell: /sbin/nologin
+    system: true
+
+- name: Download And Unarchive Node Exporter
+  ansible.builtin.unarchive:
+    src: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+    dest: /tmp/
+    remote_src: true
+
+- name: Move Binary To Path
+  ansible.builtin.copy:
+    src: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
+    dest: "/usr/local/bin/node_exporter"
+    mode: '0644'
+    remote_src: true
+
+- name: Deploy Service Template
+  ansible.builtin.template:
+    src: node_exporter.service.j2
+    dest: /etc/systemd/system/node_exporter.service
+
+- name: Reload Systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Start Node Exporter
+  ansible.builtin.systemd:
+    name: node_exporter
+    state: started
+    enabled: true
+
+- name: Ensure Firewalld is Running
+  ansible.builtin.service:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: Open Firewall  Port 9100 (Metrics)
+  ansible.posix.firewalld:
+    port: 9100/tcp
+    permanent: true
+    immediate: true
+    state: enabled
+

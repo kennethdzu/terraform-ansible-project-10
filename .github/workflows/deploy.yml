@@ -1,0 +1,14 @@
+name: Deploy Monitoring
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: hashicorp/setup-terraform@v2
+      - name: Terraform Format
+        run: terraform fmt -check -recursive
+      - name: Ansible Lint
+        uses: ansible/ansible-lint-action@v6
+        with:
+          path: "ansible/"
