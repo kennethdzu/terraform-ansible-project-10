@@ -9,6 +9,6 @@ jobs:
       - name: Terraform Format
         run: terraform fmt -check -recursive
       - name: Ansible Lint
-        uses: ansible/ansible-lint-action@v6
+        uses: ansible/ansible-lint@v6
         with:
           path: "ansible/"
