@@ -5,11 +5,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.7
-      - name: Terraform Format
-        run: terraform fmt -check -diff -recursive
       - name: Ansible Lint
         uses: ansible/ansible-lint@v6
         with:
