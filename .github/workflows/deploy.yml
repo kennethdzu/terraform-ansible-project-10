@@ -5,6 +5,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Install Ansible
+        run: pip install ansible ansible-lint
+        
+      - name: Install Galaxy Requirements
+        run: ansible-galaxy collection install -r ansible/requirements.yml
+        
+      - name: Run Ansible Lint
+        run: ansible-lint ansible/
+        
       - name: Ansible Lint
         uses: ansible/ansible-lint@v6
         with:
