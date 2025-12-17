@@ -9,7 +9,7 @@ jobs:
         with:
           terraform_version: 1.5.7
       - name: Terraform Format
-        run: terraform fmt -check -recursive
+        run: terraform fmt -check -diff -recursive
       - name: Ansible Lint
         uses: ansible/ansible-lint@v6
         with:
