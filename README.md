@@ -71,5 +71,5 @@ ansible-playbook playbook.yml
 * **Prometheus:** http://192.168.110.10:9090
 * **Grafana:** http://192.168.110.10:3000 (Default: admin/admin)
 
-## 📝 License
+## License
 This project is open source and available under the MIT License.
